@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Plus, Edit, Save, X } from "lucide-react"
+import { Plus } from "lucide-react"
 import { API_BASE_URL } from "@/lib/api-config"
 import Header from "@/components/header"
 import { useToast } from "@/hooks/use-toast"
@@ -43,9 +43,6 @@ export default function InventoryPage() {
   const [newItem, setNewItem] = useState("")
   const [newQuantity, setNewQuantity] = useState("")
   const [assets, setAssets] = useState<Asset[]>([])
-  const [editingAsset, setEditingAsset] = useState<string | null>(null) // Changed to string for item name
-  const [editItem, setEditItem] = useState("")
-  const [editQuantity, setEditQuantity] = useState("")
   const [loadingAssets, setLoadingAssets] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
@@ -327,77 +324,6 @@ export default function InventoryPage() {
     }
   }
 
-  const handleEditAsset = (asset: Asset) => {
-    setEditingAsset(asset.name) // Using name as the identifier
-    setEditItem(asset.name)
-    setEditQuantity(asset.quantity.toString())
-  }
-
-  const handleSaveEdit = async (itemName: string) => {
-    if (!user) return
-
-    const editData = {
-      action: "edit",
-      name: user?.Username || user?.username || user?.name || user?.email || "Unknown User",
-      original_item: itemName, // The original item name to identify what to edit
-      item: editItem, // The new item name (if changed)
-      quantity: Number.parseInt(editQuantity),
-    }
-
-    console.log("✏️ Editing asset...")
-    console.log("📡 PUT Request URL:", `${API_BASE_URL}/api/inventory_details`)
-    console.log("📤 PUT Request Data:", editData)
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/inventory_details`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(editData),
-      })
-
-      console.log("📥 PUT Response Status:", response.status)
-
-      if (response.ok) {
-        const responseData = await response.json()
-        console.log("📥 PUT Response Data:", responseData)
-        setEditingAsset(null)
-        setEditItem("")
-        setEditQuantity("")
-        fetchAssets() // Refresh the assets list
-        toast({
-          title: "Success",
-          description: "Asset updated successfully!",
-          duration: 3000,
-        })
-      } else {
-        const errorData = await response.json()
-        console.log("❌ PUT Error Response:", errorData)
-        toast({
-          title: "Error",
-          description: `Failed to update asset: ${errorData.error || "Unknown error"}`,
-          variant: "destructive",
-          duration: 5000,
-        })
-      }
-    } catch (error) {
-      console.error("❌ Error updating asset:", error)
-      toast({
-        title: "Error",
-        description: "Failed to update asset. Please try again.",
-        variant: "destructive",
-        duration: 5000,
-      })
-    }
-  }
-
-  const handleCancelEdit = () => {
-    setEditingAsset(null)
-    setEditItem("")
-    setEditQuantity("")
-  }
-
   const handleDeleteAsset = async (itemName: string) => {
     if (!confirm("Are you sure you want to delete this asset?")) return
     if (!user) return
@@ -579,70 +505,14 @@ export default function InventoryPage() {
                           <TableHead>S.No</TableHead>
                           <TableHead>Assets</TableHead>
                           <TableHead>Quantity</TableHead>
-                          <TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {assets.map((asset, index) => (
                           <TableRow key={asset.name}>
                             <TableCell>{index + 1}</TableCell>
-                            <TableCell>
-                              {editingAsset === asset.name ? (
-                                <Input
-                                  value={editItem}
-                                  onChange={(e) => setEditItem(e.target.value)}
-                                  className="w-full"
-                                />
-                              ) : (
-                                asset.name
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {editingAsset === asset.name ? (
-                                <Input
-                                  type="number"
-                                  value={editQuantity}
-                                  onChange={(e) => setEditQuantity(e.target.value)}
-                                  className="w-20"
-                                  min="1"
-                                />
-                              ) : (
-                                asset.quantity
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex space-x-2">
-                                {editingAsset === asset.name ? (
-                                  <>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => handleSaveEdit(asset.name)}
-                                      className="text-green-600 hover:text-green-800"
-                                    >
-                                      <Save className="w-4 h-4" />
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={handleCancelEdit}
-                                      className="text-gray-600 hover:text-gray-800"
-                                    >
-                                      <X className="w-4 h-4" />
-                                    </Button>
-                                  </>
-                                ) : (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleEditAsset(asset)}
-                                    className="text-blue-600 hover:text-blue-800"
-                                  >
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
-                                )}
-                              </div>
-                            </TableCell>
+                            <TableCell>{asset.name}</TableCell>
+                            <TableCell>{asset.quantity}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
