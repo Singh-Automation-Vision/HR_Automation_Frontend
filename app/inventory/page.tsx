@@ -30,10 +30,6 @@ interface Asset {
 }
 
 export default function InventoryPage() {
-  console.log("🚀 InventoryPage component loaded - Console logging is working!")
-  console.log("🌐 Current URL:", window.location.href)
-  console.log("⏰ Component load time:", new Date().toISOString())
-
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [toolNeeded, setToolNeeded] = useState("")
@@ -44,10 +40,25 @@ export default function InventoryPage() {
   const [newQuantity, setNewQuantity] = useState("")
   const [assets, setAssets] = useState<Asset[]>([])
   const [loadingAssets, setLoadingAssets] = useState(false)
+  const [isClient, setIsClient] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
 
+  // Set isClient to true once component mounts
   useEffect(() => {
+    setIsClient(true)
+
+    // Log only on client-side
+    console.log("🚀 InventoryPage component loaded - Console logging is working!")
+    if (typeof window !== "undefined") {
+      console.log("🌐 Current URL:", window.location.href)
+    }
+    console.log("⏰ Component load time:", new Date().toISOString())
+  }, [])
+
+  useEffect(() => {
+    if (!isClient) return
+
     console.log("🔄 useEffect triggered - checking user data...")
 
     // Get user data from localStorage
@@ -73,17 +84,19 @@ export default function InventoryPage() {
     } finally {
       setLoading(false)
     }
-  }, [router])
+  }, [router, isClient])
 
   // Add a new useEffect to fetch assets when user data is available
   useEffect(() => {
-    if (user) {
+    if (user && isClient) {
       console.log("👤 User data is available, fetching assets...")
       fetchAssets()
     }
-  }, [user])
+  }, [user, isClient])
 
   const fetchAssets = async () => {
+    if (!isClient) return
+
     setLoadingAssets(true)
 
     if (!user) {
@@ -207,7 +220,7 @@ export default function InventoryPage() {
 
   const handleRequestSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user || !toolNeeded || !reason || !agreementChecked) return
+    if (!user || !toolNeeded || !reason || !agreementChecked || !isClient) return
 
     setSubmittingRequest(true)
 
@@ -268,7 +281,7 @@ export default function InventoryPage() {
 
   const handleAddAsset = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newItem || !newQuantity || !user) return
+    if (!newItem || !newQuantity || !user || !isClient) return
 
     const addData = {
       action: "add",
@@ -325,8 +338,15 @@ export default function InventoryPage() {
   }
 
   const handleDeleteAsset = async (itemName: string) => {
-    if (!confirm("Are you sure you want to delete this asset?")) return
-    if (!user) return
+    if (!isClient) return
+
+    // Use a safer confirm dialog approach for SSR
+    let confirmDelete = false
+    if (typeof window !== "undefined") {
+      confirmDelete = window.confirm("Are you sure you want to delete this asset?")
+    }
+
+    if (!confirmDelete || !user) return
 
     // Find the asset to get the quantity
     const assetToDelete = assets.find((asset) => asset.name === itemName)
@@ -392,7 +412,8 @@ export default function InventoryPage() {
     }
   }
 
-  if (loading) {
+  // Show a loading state during SSR or initial client-side rendering
+  if (!isClient || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="text-center">
