@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, usePathname } from "next/navigation"
-import { Home, LogOut, Package, Users } from "lucide-react"
+import { Home, LogOut, Package, Users, Calendar } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 
@@ -62,7 +62,8 @@ export default function Header() {
       pathname === path ||
       (path === "/dashboard" && (pathname === "/dashboard" || pathname === "/admin/dashboard")) ||
       (path === "/hr-management" && pathname === "/hr-management") ||
-      (path === "/inventory" && pathname === "/inventory")
+      (path === "/inventory" && pathname === "/inventory") ||
+      (path === "/meetings" && pathname === "/meetings")
     )
   }
 
@@ -90,19 +91,6 @@ export default function Header() {
             <span>Home</span>
           </Link>
 
-          {/* Show HR Management for admin users */}
-          {isAdmin && (
-            <Link
-              href="/hr-management"
-              className={`flex items-center text-sm font-medium transition-colors ${
-                isActive("/hr-management") ? "text-[#00ff00]" : "text-gray-700 hover:text-gray-900"
-              }`}
-            >
-              <Users className="w-4 h-4 mr-1" />
-              <span>HR Management</span>
-            </Link>
-          )}
-
           {/* Show Inventory only for non-admin users (hide for admin) */}
           {!isAdmin && (
             <Link
@@ -113,6 +101,32 @@ export default function Header() {
             >
               <Package className="w-4 h-4 mr-1" />
               <span>Inventory</span>
+            </Link>
+          )}
+
+          {/* Show Meetings only for admin users */}
+          {isAdmin && (
+            <Link
+              href="/meetings"
+              className={`flex items-center text-sm font-medium transition-colors ${
+                isActive("/meetings") ? "text-[#00ff00]" : "text-gray-700 hover:text-gray-900"
+              }`}
+            >
+              <Calendar className="w-4 h-4 mr-1" />
+              <span>Meetings</span>
+            </Link>
+          )}
+
+          {/* Show HR Management for admin users */}
+          {isAdmin && (
+            <Link
+              href="/hr-management"
+              className={`flex items-center text-sm font-medium transition-colors ${
+                isActive("/hr-management") ? "text-[#00ff00]" : "text-gray-700 hover:text-gray-900"
+              }`}
+            >
+              <Users className="w-4 h-4 mr-1" />
+              <span>HR Management</span>
             </Link>
           )}
 
